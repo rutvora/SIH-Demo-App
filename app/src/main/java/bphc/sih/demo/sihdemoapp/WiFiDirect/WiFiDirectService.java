@@ -20,12 +20,15 @@ public class WiFiDirectService implements WifiP2pManager.ActionListener, WifiP2p
     private WifiP2pManager wifiP2pManager;
     private WiFiDirectBroadcastReceiver receiver = null;
     private Context context;
+    private boolean isLocalServiceRegistered = false;
 
     public WiFiDirectService(Context context) {
         this.context = context;
     }
 
     public void setup() {
+        unregisterReceiver();
+
         setupIntentFilters();
         setupBroadcastReceiver();
         WifiManager wifiManager = (WifiManager) this.context.getSystemService(Context.WIFI_SERVICE);
@@ -33,11 +36,8 @@ public class WiFiDirectService implements WifiP2pManager.ActionListener, WifiP2p
             wifiManager.setWifiEnabled(true);
         } else if (wifiManager == null)
             Toast.makeText(context, "Error accessing WiFi hardware", Toast.LENGTH_SHORT).show();
-        registerLocalService();
+        if (!isLocalServiceRegistered) registerLocalService();
         discoverService();
-    }
-
-    public void setIsWifiP2pEnabled(boolean b) {
     }
 
     private void setupIntentFilters() {
@@ -62,15 +62,16 @@ public class WiFiDirectService implements WifiP2pManager.ActionListener, WifiP2p
         context.registerReceiver(receiver, intentFilter);
     }
 
-    public void unregisterReceiver() {
+    void unregisterReceiver() {
         if (receiver != null) context.unregisterReceiver(receiver);
     }
 
     private void registerLocalService() {
         HashMap<String, String> record = new HashMap<>();
-        record.put("messageRelay", "Test String");          //new DataManipulator().getString()
+        record.put("messageRelay", "Test Message");          //new DataManipulator().getString()
         WifiP2pDnsSdServiceInfo serviceInfo = WifiP2pDnsSdServiceInfo.newInstance("messageRelay", "_presense._tcp", record);
         wifiP2pManager.addLocalService(channel, serviceInfo, this);
+        isLocalServiceRegistered = true;
     }
 
     @Override

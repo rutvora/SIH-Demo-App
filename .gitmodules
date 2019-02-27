@@ -1,0 +1,6 @@
+[submodule "Decoders"]
+	path = app/src/main/java/bphc/sih/demo/sihdemoapp/Helpers/Decoders
+	url = https://github.com/rutvora/SIH_2019.git
+[submodule "GUI"]
+	path = app/src/main/assets/WebGUI
+	url = https://github.com/aman0109/SIH-Client-GUI.git

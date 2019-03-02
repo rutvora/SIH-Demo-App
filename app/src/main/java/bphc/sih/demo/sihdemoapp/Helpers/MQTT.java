@@ -1,6 +1,7 @@
 package bphc.sih.demo.sihdemoapp.Helpers;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -14,6 +15,11 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import bphc.sih.demo.sihdemoapp.Helpers.Decoders.Hotspots;
+import bphc.sih.demo.sihdemoapp.MapsActivity;
 
 public class MQTT implements MqttCallbackExtended {
     private final String serverUri = "tcp://192.168.43.53:1883";      //TODO: Define server
@@ -99,7 +105,21 @@ public class MQTT implements MqttCallbackExtended {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-        Log.w("Mqtt " + topic, message.toString());
+        Log.w("Mqtt ", message.toString());
+        try {
+            JSONObject object = new JSONObject(message.toString());
+            if (object.getString("type").equals("hotspots")) {
+                MapsActivity.hotspots = Hotspots.decode(object.getString("data"));
+                if (MapsActivity.hotspots != null) {
+                    Intent intent = new Intent(context, MapsActivity.class);
+                    context.startActivity(intent);
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override

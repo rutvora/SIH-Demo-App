@@ -5,15 +5,18 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 
-import java.util.Set;
+import java.lang.ref.WeakReference;
+import java.util.Arrays;
 
+import bphc.sih.demo.sihdemoapp.Helpers.JavaScriptInterface;
 import bphc.sih.demo.sihdemoapp.Helpers.MQTT;
 
 public class WebView extends AppCompatActivity implements View.OnClickListener {
-    public static android.webkit.WebView myWebView;     //TODO: Remove this after proper implementation of calling JS functions
-    private SharedPreferences sharedPreferences;
+    public static WeakReference<android.webkit.WebView> myWebView;     //TODO: Remove this after proper implementation of calling JS functions
+    MQTT mqtt;
 
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -22,7 +25,7 @@ public class WebView extends AppCompatActivity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         //Setup SharedPrefs
-        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences("Default", Context.MODE_PRIVATE);
 
         setContentView(R.layout.activity_web_view);
 
@@ -31,19 +34,28 @@ public class WebView extends AppCompatActivity implements View.OnClickListener {
 //        startActivity(intent);
 
         //GUI Webview
-//        myWebView = findViewById(R.id.webview);
-//        myWebView.setOnClickListener(this);
-//        myWebView.getSettings().setJavaScriptEnabled(true);
-//        myWebView.addJavascriptInterface(new JavaScriptInterface(this), "JSInterface");
-//        myWebView.loadUrl("file:///android_asset/WebGUI/index.html");
-//
-        //MQTT Setup
-        new MQTT(this);
+        String url;
+        if (sharedPreferences.getString("lang", "lang").equals("lang"))
+            url = "file:///android_asset/WebGUI/lang.html";
+        else url = "file:///android_asset/WebGUI/index.html";
+        android.webkit.WebView webView = findViewById(R.id.webview);
+        webView.setOnClickListener(this);
+        webView.getSettings().setJavaScriptEnabled(true);
+        final JavaScriptInterface javaScriptInterface = new JavaScriptInterface(this);
+        webView.addJavascriptInterface(javaScriptInterface, "JSInterface");
 
-        //Notification Test
-//        NotificationHandler handler = new NotificationHandler(this);
-//        handler.createNotificationChannel();
-//        handler.notifyUser("sdfg","sfgds");
+
+        javaScriptInterface.data = getIntent().getStringArrayExtra("data");
+        if (javaScriptInterface.data != null) {
+            Log.w("Data webview", Arrays.toString(javaScriptInterface.data));
+
+        }
+        webView.loadUrl(url);
+        myWebView = new WeakReference<>(webView);
+
+        //MQTT Setup
+        mqtt = new MQTT(this);
+
 
         //WifiDirect Setup
 //        Scheduler.scheduleJobCheckMessages(this);
@@ -56,19 +68,15 @@ public class WebView extends AppCompatActivity implements View.OnClickListener {
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mqtt.disconnect();
+    }
+
 //    public void putSharedPreference(String key, String value) {
 //        SharedPreferences.Editor editor = sharedPreferences.edit();
 //        editor.putString(key, value);
 //        editor.apply();
 //    }
-
-    public void putSharedPreference(String key, Set<String> values) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putStringSet(key, values);
-        editor.apply();
-    }
-
-    public Set<String> getSharedPreference(String key) {
-        return sharedPreferences.getStringSet(key, null);
-    }
 }

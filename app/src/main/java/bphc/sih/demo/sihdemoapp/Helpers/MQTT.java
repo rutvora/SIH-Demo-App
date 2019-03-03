@@ -44,7 +44,7 @@ public class MQTT implements MqttCallbackExtended {
         //mqttConnectOptions.setPassword(password.toCharArray());
 
         try {
-
+            Log.w("Connected", mqttAndroidClient.isConnected() + "");
             mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
@@ -68,6 +68,16 @@ public class MQTT implements MqttCallbackExtended {
 
         } catch (MqttException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public void disconnect() {
+        try {
+//            mqttAndroidClient.disconnect();
+            mqttAndroidClient.unregisterResources();
+            mqttAndroidClient.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -114,6 +124,16 @@ public class MQTT implements MqttCallbackExtended {
                     Intent intent = new Intent(context, MapsActivity.class);
                     context.startActivity(intent);
                 }
+            } else if (object.getString("type").equals("weather")) {
+                NotificationHandler handler = new NotificationHandler(context);
+                handler.createNotificationChannel();
+                handler.notifyUser("Weather Alert", "Click here to know more", object.getString("id"), object.getString("data"), true);
+            } else if (object.getString("type").equals("disaster")) {
+                NotificationHandler handler = new NotificationHandler(context);
+                handler.createNotificationChannel();
+                handler.notifyUser("Disaster Alert", "Click here to know more", object.getString("id"), object.getString("data"), false);
+
+//                DisasterManagement.decode(context, object.getString("id"), object.getString("data"));
             }
 
         } catch (JSONException e) {

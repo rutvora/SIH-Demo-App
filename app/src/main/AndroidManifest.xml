@@ -46,7 +46,7 @@
 
         <activity
             android:name=".MapsActivity"
-            android:label="@string/title_activity_maps"></activity>
+            android:label="@string/title_activity_maps" />
         <!-- TODO: Check this someday -->
         <activity android:name=".WebView">
             <intent-filter>

@@ -1,8 +1,8 @@
 package bphc.sih.demo.sihdemoapp.Helpers;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
+import android.util.Pair;
 import android.widget.Toast;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -18,11 +18,10 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import bphc.sih.demo.sihdemoapp.Helpers.Decoders.Hotspots;
-import bphc.sih.demo.sihdemoapp.MapsActivity;
+import bphc.sih.demo.sihdemoapp.Helpers.Decoders.Continuous;
 
 public class MQTT implements MqttCallbackExtended {
-    private final String serverUri = "tcp://192.168.43.53:1883";      //TODO: Define server
+    private final String serverUri = "tcp://192.168.43.41:1883";      //TODO: Define server
     private final String topic = "bla";          //TODO: Define topic
     private Context context;
     private MqttAndroidClient mqttAndroidClient;
@@ -118,22 +117,43 @@ public class MQTT implements MqttCallbackExtended {
         Log.w("Mqtt ", message.toString());
         try {
             JSONObject object = new JSONObject(message.toString());
-            if (object.getString("type").equals("hotspots")) {
-                MapsActivity.hotspots = Hotspots.decode(object.getString("data"));
-                if (MapsActivity.hotspots != null) {
-                    Intent intent = new Intent(context, MapsActivity.class);
-                    context.startActivity(intent);
+            switch (object.getString("type")) {
+                case "text":
+                    Pair<Continuous, Integer> result = Continuous.decode(object.getString("data"));
+                    Log.w("remaining", result.second + "");
+                    if (result.second == 0) Log.w("Continous", result.first.getString());
+                    break;
+                case "hotspots": {
+
+                    NotificationHandler handler = new NotificationHandler(context);
+                    handler.createNotificationChannel();
+                    handler.notifyUser("Relief centres near you", "Click to open maps",
+                            object.getString("id"), object.getString("data"), object.getString("type"));
+
+
+//                MapsActivity.hotspots = Hotspots.decode(object.getString("data"));
+//                if (MapsActivity.hotspots != null) {
+//                    Intent intent = new Intent(context, MapsActivity.class);
+//                    context.startActivity(intent);
+//                }
+                    break;
                 }
-            } else if (object.getString("type").equals("weather")) {
-                NotificationHandler handler = new NotificationHandler(context);
-                handler.createNotificationChannel();
-                handler.notifyUser("Weather Alert", "Click here to know more", object.getString("id"), object.getString("data"), true);
-            } else if (object.getString("type").equals("disaster")) {
-                NotificationHandler handler = new NotificationHandler(context);
-                handler.createNotificationChannel();
-                handler.notifyUser("Disaster Alert", "Click here to know more", object.getString("id"), object.getString("data"), false);
+                case "weather": {
+                    NotificationHandler handler = new NotificationHandler(context);
+                    handler.createNotificationChannel();
+                    handler.notifyUser("Weather Alert", "Click here to know more",
+                            object.getString("id"), object.getString("data"), object.getString("type"));
+                    break;
+                }
+                case "disaster": {
+                    NotificationHandler handler = new NotificationHandler(context);
+                    handler.createNotificationChannel();
+                    handler.notifyUser("Disaster Alert", "Click here to know more",
+                            object.getString("id"), object.getString("data"), object.getString("type"));
 
 //                DisasterManagement.decode(context, object.getString("id"), object.getString("data"));
+                    break;
+                }
             }
 
         } catch (JSONException e) {

@@ -2,7 +2,6 @@ package bphc.sih.demo.sihdemoapp;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -14,12 +13,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.Set;
+import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
-    private GoogleMap map;
-    public static Set<Pair<LatLng, String>> hotspots;
 
 
     @Override
@@ -52,25 +48,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        map = googleMap;
+        GoogleMap map = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(23.0247, 72.5168);
-        LatLng canberra = new LatLng(23.0313, 72.5148);
-//        ArrayList<Pair<LatLng, String>> markers = new ArrayList<>();
-////        TODO: Get all markers (call some function)
-//        for (Pair<LatLng, String> marker : markers) {
-//            map.addMarker(new MarkerOptions().position(marker.first).title(marker.second));
-//        }
-        float zoomLevel = 15.0f;
-//        for (Pair<LatLng, String> hotspot : hotspots) {
-//            Location hotspotLoc = new Location("hotspot");
-//            hotspotLoc.setLatitude(hotspot.first.latitude);
-//            hotspotLoc.setLongitude(hotspot.first.longitude);
-//            map.addMarker(new MarkerOptions().position(hotspot.first).title(hotspot.second));
-//        }
-        map.addMarker(new MarkerOptions().position(sydney).title("Medicine"));
-        map.addMarker(new MarkerOptions().position(canberra).title("Food"));
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, zoomLevel));
+//        LatLng sydney = new LatLng(23.0247, 72.5168);
+//        LatLng canberra = new LatLng(23.0313, 72.5148);
+        float zoomLevel = 12.0f;
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            ArrayList<LatLng> locations = extras.getParcelableArrayList("locations");
+            ArrayList<String> amenities = extras.getStringArrayList("amenities");
+            for (int i = 0; i < locations.size(); i++) {
+                map.addMarker(new MarkerOptions().position(locations.get(i)).title(amenities.get(i)));
+            }
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(locations.get(0), zoomLevel));
+        }
+
+//        map.addMarker(new MarkerOptions().position(sydney).title("Medicine"));
+//        map.addMarker(new MarkerOptions().position(canberra).title("Food"));
     }
 }

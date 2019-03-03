@@ -8,12 +8,16 @@ import android.content.Intent;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
+import android.util.Pair;
 
-import java.util.Arrays;
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.ArrayList;
 
 import bphc.sih.demo.sihdemoapp.Helpers.Decoders.DisasterManagement;
+import bphc.sih.demo.sihdemoapp.Helpers.Decoders.Hotspots;
 import bphc.sih.demo.sihdemoapp.Helpers.Decoders.WeatherWarning;
+import bphc.sih.demo.sihdemoapp.MapsActivity;
 import bphc.sih.demo.sihdemoapp.WebView;
 
 public class NotificationHandler {
@@ -24,19 +28,30 @@ public class NotificationHandler {
         this.context = context;
     }
 
-    public void notifyUser(String title, String content, String id, String message, boolean isWeather) {
+    public void notifyUser(String title, String content, String id, String message, String type) {
 
-        Intent intent = new Intent(context, WebView.class);
-        if (title.equals("Check Nearby Amenities"))
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        String[] data;
-        Log.w("isWeather", isWeather + "");
-        if (isWeather) data = WeatherWarning.decode(context, id, message);
-        else data = DisasterManagement.decode(context, id, message);
-        if (data == null) return;
-        Log.w("Data Notif", Arrays.toString(data));
-        intent.putExtra("data", data);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, Integer.parseInt(data[0]), intent, 0);
+        Intent intent;
+
+        //Handle Maps
+        if (type.equals("hotspots")) {
+            intent = new Intent(context, MapsActivity.class);
+            Pair<ArrayList<LatLng>, ArrayList<String>> hotspots = Hotspots.decode(context, message);
+            intent.putExtra("locations", hotspots.first);
+            intent.putExtra("amenities", hotspots.second);
+
+        }
+
+        //Handle WebView
+        else {
+            intent = new Intent(context, WebView.class);
+            String[] data;
+            if (type.equals("weather")) data = WeatherWarning.decode(context, id, message);
+            else data = DisasterManagement.decode(context, id, message);
+            if (data == null) return;
+            intent.putExtra("data", data);
+        }
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, Integer.parseInt(id), intent, 0);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "Channel ID")
                 .setSmallIcon(android.R.drawable.ic_menu_compass)
